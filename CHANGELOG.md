@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0-beta.17
+
+- Windows: builds again with the newest Visual Studio compiler. 0.2.0-beta.16 was never
+  published because its Windows build failed; everything listed under it ships here.
+
 ## 0.2.0-beta.16
 
 - Spending check (Insights): fixed-cost ratio, new or dearer subscriptions, lifestyle

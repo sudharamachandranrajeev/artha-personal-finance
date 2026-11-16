@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.0-beta.16
+
+- Spending check (Insights): fixed-cost ratio, new or dearer subscriptions, lifestyle
+  inflation (spending growth against income growth), your categories against the ONS
+  household averages (Family Spending FYE 2025, Table A1), fixed costs against a year ago, and
+  "Cut this" cards with the yearly saving. Every figure shows its formula, inputs, data dates
+  and healthy range with its source; rules of thumb are marked "convention".
+- Emergency cushion (dashboard): months of essential spending your cash covers against your
+  target (3, 6, 9 or 12 months; default 6), what is still needed, and a note from the live Bank
+  Rate and inflation figures.
+- This week (dashboard): spend this week and month, spend per day left against your budgets,
+  top payees, bills in the next 7 days and one next step.
+- Data freshness: each account shows how old its latest entry is, and the dashboard nudges you
+  to import a statement after 35 days (change it there). Pensions and property only show the
+  age.
+- Forecast: a "Day by day" calendar of your projected balance, with bill days and the lowest
+  day marked.
+- Fixed: the ISA allowance counted opening balances, ISA-to-ISA transfers and interest as
+  money paid in. It now counts only new money paid in this tax year, and warns if you really
+  go over.
+- Fixed: the cash ISA limit is not falling to £12,000 (Budget 2026 dropped it). The tip now
+  explains the savings tax rise to 24/44/49% from 6 April 2027.
+
 ## 0.2.0-beta.15
 
 - Phones get new navigation: a floating dock that scrolls through every screen (the "More"

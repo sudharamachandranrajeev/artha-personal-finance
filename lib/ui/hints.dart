@@ -67,6 +67,15 @@ const arthaHints = <String, String>{
       'plus the one-offs you plan (dots on the line).',
   'card.budgets': 'This month’s spending against the monthly budget you set for each category.',
   'card.bills': 'Payments that repeat on a steady schedule, with the date each is next expected.',
+  'card.recap':
+      'Your week in numbers, worked out on this device: spending so far, what is left per day, '
+      'where the money went, bills due and one next step.',
+  'card.cushion':
+      'Months of essential spending your cash could cover if income stopped. Pick the target that fits you; '
+      'the usual guidance is 3-6 months, more with one income or dependants.',
+  'card.freshness':
+      'How old the newest statement or import is for each account. Old data makes every total less sure.',
+  'card.cut': 'Costs that grew or are new, and spending well above UK households, with the yearly saving.',
   // Page banners
   'page.dashboard':
       'This is your financial overview. Add accounts and import a statement, and the charts fill in. '

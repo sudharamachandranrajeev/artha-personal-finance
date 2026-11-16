@@ -10,6 +10,7 @@ import '../insights/catalogue.dart';
 import '../insights/insights.dart';
 import '../insights/risk.dart';
 import 'assistant_page.dart';
+import 'money_check_cards.dart';
 import 'recurring_page.dart';
 import 'risk_page.dart';
 import 'world_card.dart';
@@ -138,6 +139,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                     ),
                   ],
                 ),
+                const SpendingCheck(),
                 if (m.isaUsed != null)
                   SectionCard(
                     title: 'ISA allowance ${UkAllowances.taxYear}',

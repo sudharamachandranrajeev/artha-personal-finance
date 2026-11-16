@@ -15,6 +15,7 @@ import 'common.dart';
 import 'entry_editor.dart';
 import 'import_page.dart';
 import 'insights_page.dart';
+import 'money_check_cards.dart';
 import 'recurring_page.dart';
 import 'transactions_page.dart';
 
@@ -70,6 +71,7 @@ class DashboardPage extends ConsumerWidget {
             final recurring = insights.value?.recurring ?? const <Recurring>[];
             final planned = ref.watch(plannedProvider).value ?? const <PlannedRow>[];
             final cur = ref.watch(setupProvider).value ?? 'GBP';
+            final check = ref.watch(moneyCheckProvider).value;
             if (!hasAccounts) {
               return Card(
                 child: EmptyState(
@@ -270,6 +272,14 @@ class DashboardPage extends ConsumerWidget {
                       ),
                     ),
                   ),
+                if (check != null) ...[
+                  SectionHeader('This week'),
+                  Hint('card.recap', child: RecapCard(check.recap, cur)),
+                  if (check.freshness.any((f) => f.stale)) ...[
+                    SectionHeader('Data freshness'),
+                    Hint('card.freshness', child: FreshnessCard(check.freshness, check.nudgeDays)),
+                  ],
+                ],
                 SectionHeader(
                   'Your activity',
                   actionLabel: 'See all',
@@ -328,6 +338,14 @@ class DashboardPage extends ConsumerWidget {
                       cur,
                     ),
                   ),
+                ],
+                if (check != null) ...[
+                  SectionHeader(
+                    'Emergency cushion',
+                    actionLabel: 'Spending check',
+                    onAction: () => _openInsights(context),
+                  ),
+                  Hint('card.cushion', child: CushionCard(check.cushion, cur)),
                 ],
                 SectionHeader('Your stats'),
                 _statsGrid(d, m, cur),
@@ -440,7 +458,7 @@ class DashboardPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ForecastChart(f, cur),
+            _ForecastView(f, cur),
             const SizedBox(height: 12),
             if (low.balance < 0)
               StatusLabel(
@@ -616,6 +634,41 @@ class DashboardPage extends ConsumerWidget {
       },
     );
   }
+}
+
+/// The forecast as a line chart or a day-by-day calendar.
+class _ForecastView extends StatefulWidget {
+  const _ForecastView(this.f, this.cur);
+  final CashForecast f;
+  final String cur;
+
+  @override
+  State<_ForecastView> createState() => _ForecastViewState();
+}
+
+class _ForecastViewState extends State<_ForecastView> {
+  bool _calendar = false;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Align(
+        alignment: Alignment.centerRight,
+        child: SegmentedButton<bool>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(value: false, label: Text('Chart'), icon: Icon(Icons.show_chart)),
+            ButtonSegment(value: true, label: Text('Day by day'), icon: Icon(Icons.calendar_month_outlined)),
+          ],
+          selected: {_calendar},
+          onSelectionChanged: (s) => setState(() => _calendar = s.first),
+        ),
+      ),
+      const SizedBox(height: 12),
+      _calendar ? ForecastCalendar(widget.f, widget.cur) : ForecastChart(widget.f, widget.cur),
+    ],
+  );
 }
 
 /// Mock activity card: overlapping discs, title, caption and a heavy value.

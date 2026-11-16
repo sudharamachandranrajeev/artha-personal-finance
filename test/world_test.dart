@@ -154,14 +154,16 @@ void main() {
       expect(byId['real_return']!.title, contains('3.5%'));
       expect(byId['bank_rate']!.body, contains('5 Nov 2026'));
       expect(byId['self_assessment']!.title, contains('99 days'));
-      expect(byId['cash_isa_cut']!.body, contains('£12,000'));
+      expect(byId['savings_tax_rise']!.body, contains('24%, 44% or 49%'));
+      expect(byId['savings_tax_rise']!.body, contains('full £20,000'));
+      expect(tips.any((t) => '${t.title} ${t.body} ${t.ask}'.contains('£12,000')), isFalse);
       expect(byId.keys, contains('scams'));
       expect(tips.every((t) => !t.body.contains('may be out of date')), isTrue);
     });
 
-    test('old catalogue figures are flagged, and after the cut the ISA tip goes', () {
+    test('old catalogue figures are flagged, and once the rise starts its tip goes', () {
       final tips = quickTips(situation(), market, '2027-05-01');
-      expect({for (final t in tips) t.id}, isNot(contains('cash_isa_cut')));
+      expect({for (final t in tips) t.id}, isNot(contains('savings_tax_rise')));
       expect(tips.firstWhere((t) => t.id == 'real_return').body, contains('may be out of date'));
     });
 

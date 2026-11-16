@@ -505,15 +505,16 @@ List<Tip> quickTips(Situation s, MarketSnapshot market, String today) {
         ),
       );
     }
-    if (today.compareTo(UkRates.cashIsaFrom) < 0) {
+    if (today.compareTo(UkRates.savingsTaxFrom) < 0) {
       out.add(
         Tip(
-          'cash_isa_cut',
-          'Cash ISA limit falls in April 2027',
-          'From ${niceDate(UkRates.cashIsaFrom)} under-65s can save ${_pounds(UkRates.cashIsaUnder65)} a year in cash '
-              'ISAs (the total stays ${_pounds(UkAllowances.isa)}). This tax year you can still put the full '
-              '${_pounds(UkAllowances.isa)} in cash.',
-          ask: 'Should I fill my cash ISA before the limit falls to £12,000 in April 2027?',
+          'savings_tax_rise',
+          'Tax on savings interest rises in April 2027',
+          'From ${niceDate(UkRates.savingsTaxFrom)} interest above your personal savings allowance is taxed at '
+              '${UkRates.savingsTaxBasic}%, ${UkRates.savingsTaxHigher}% or ${UkRates.savingsTaxAdditional}% '
+              '(basic, higher, additional rate). Interest inside an ISA stays tax-free, and cash ISAs keep the '
+              'full ${_pounds(UkAllowances.isa)} allowance.',
+          ask: 'How will the April 2027 savings tax rise affect me, and should more of my savings go in an ISA?',
           source: 'HM Treasury',
         ),
       );

@@ -53,14 +53,26 @@ class UkRates {
   static const premiumBondsPrize = 4.35; // prize fund rate, tax-free
   static const premiumBondsOdds = '21,000 to 1';
   static const fscsLimit = 12000000; // pence, per person per banking licence
-  static const cashIsaFrom = '2027-04-06';
-  static const cashIsaUnder65 = 1200000; // pence a year from [cashIsaFrom]
+  // Budget 2026 (28 Oct 2026): tax on savings interest above the personal
+  // savings allowance rises from [savingsTaxFrom]. The planned £12,000 cash ISA
+  // limit was dropped; cash ISAs keep the full ISA allowance.
+  static const savingsTaxFrom = '2027-04-06';
+  static const savingsTaxBasic = 24; // percent, was 20
+  static const savingsTaxHigher = 44; // was 40
+  static const savingsTaxAdditional = 49; // was 45
   static const nextRateDecision = '2026-11-05';
   static const sources = [
     ('Moneyfacts best buys, 23 Oct 2026', 'https://moneyfactscompare.co.uk/savings-accounts/'),
     ('NS&I Premium Bonds', 'https://www.nsandi.com/products/premium-bonds'),
     ('FSCS deposit protection', 'https://www.fscs.org.uk/check/check-your-money-is-protected/'),
-    ('Cash ISA changes from April 2027', 'https://www.gov.uk/individual-savings-accounts'),
+    (
+      'HMRC: cash ISA limit stays £20,000 (Oct 2026)',
+      'https://www.gov.uk/government/publications/tax-free-savings-newsletter-24/tax-free-savings-newsletter-24-october-2026',
+    ),
+    (
+      'Budget 2026: tax rates and legislation',
+      'https://www.gov.uk/government/publications/budget-2026-overview-of-tax-legislation-and-rates-ootlar/budget-2026-overview-of-tax-legislation-and-rates-ootlar',
+    ),
     (
       'Bank of England Bank Rate',
       'https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate',

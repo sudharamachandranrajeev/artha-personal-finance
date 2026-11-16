@@ -172,7 +172,14 @@ void main() {
       expect(rows.first.verdict, Verdict.good);
       final m = onsMeasure(rows, 'GBP', 'Aug to Oct 2026');
       expect(m.verdict, Verdict.flag);
-      expect(m.inputs.last.text, contains('unconfirmed'));
+      // Every figure is checked against ONS Workbook 1, Table A1.
+      expect(m.inputs.any((i) => i.text!.contains('unconfirmed')), isFalse);
+      expect(OnsFamilySpending.lines.every((l) => l.confirmed), isTrue);
+      expect(
+        {for (final l in OnsFamilySpending.lines) l.id: l.weekly},
+        {'housing': 11840, 'transport': 9640, 'recreation': 8210, 'food': 7370},
+      );
+      expect(m.source.label, contains('Table A1'));
       expect(m.source.url, OnsFamilySpending.url);
     });
 

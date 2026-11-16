@@ -83,6 +83,55 @@ class UkRates {
   static bool stale(String today) => daysBetween(today, asOf) > 60;
 }
 
+/// One spending group from ONS Family Spending: the average UK household's
+/// weekly spend ([weekly], pence) and the Artha categories that fall in it.
+class OnsLine {
+  const OnsLine(this.id, this.label, this.weekly, this.categories, {this.confirmed = true, this.note = ''});
+  final String id;
+  final String label;
+  final int weekly;
+  final Set<String> categories;
+
+  /// False when the figure comes from a secondary ONS source not yet checked
+  /// against the workbook; the app says so next to it.
+  final bool confirmed;
+  final String note;
+
+  /// Per month: weekly x 52 / 12.
+  int get monthly => (weekly * 52 / 12).round();
+}
+
+/// ONS Family Spending in the UK, financial year ending 2025 (April 2024 to
+/// March 2025), published 11 June 2026. Average across all UK households,
+/// not adjusted for size, income or region. Checked on [asOf]; refresh once
+/// a year when the next release comes out.
+class OnsFamilySpending {
+  static const asOf = '2026-11-16';
+  static const published = '2026-06-11';
+  static const period = 'April 2024 to March 2025';
+  static const sourceLabel = 'ONS Family Spending in the UK, April 2024 to March 2025';
+  static const url =
+      'https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/expenditure/'
+      'bulletins/familyspendingintheuk/april2024tomarch2025';
+  static const totalWeekly = 67660;
+  static const lines = [
+    OnsLine('housing', 'Housing, fuel and power', 11840, {
+      'cat.housing',
+      'cat.utilities',
+    }, note: 'ONS counts rent net of housing benefit and leaves mortgage repayments out.'),
+    OnsLine('transport', 'Transport', 9640, {'cat.transport', 'cat.car'}),
+    OnsLine('recreation', 'Recreation and culture', 8210, {
+      'cat.entertainment',
+      'cat.subscriptions',
+      'cat.travel',
+    }, confirmed: false),
+    OnsLine('food', 'Food and drink at home', 7370, {'cat.groceries'}, confirmed: false),
+  ];
+
+  /// More than 15 months old: a newer release is likely out.
+  static bool stale(String today) => daysBetween(today, asOf) > 456;
+}
+
 /// First day of the UK tax year containing [iso] (yyyy-MM-dd).
 String ukTaxYearStart(String iso) {
   final y = int.parse(iso.substring(0, 4));

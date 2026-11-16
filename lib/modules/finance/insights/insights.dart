@@ -10,6 +10,7 @@ import '../portfolio/portfolio.dart';
 import '../reports/reports.dart';
 import 'catalogue.dart';
 import 'categorizer.dart';
+import 'money_check.dart' show SpendItem;
 
 /// A categorised transaction as the pattern finders see it. [amount] is the
 /// money flow: negative out, positive in (base currency).
@@ -320,6 +321,87 @@ class InsightEngine {
       all,
       today,
     );
+  }
+
+  /// Per open account of the user's own (not holdings inside an account):
+  /// the newest statement balance, imported row and any entry, on or before
+  /// today.
+  Future<List<({String id, String name, String? statement, String? imported, String? entry})>>
+  freshnessRows() async {
+    Future<Map<String, String>> latest(String sql) async => {
+      for (final r
+          in await db
+              .customSelect(
+                sql,
+                variables: [Variable(today)],
+                readsFrom: {db.entries, db.postings, db.balanceChecks},
+              )
+              .get())
+        r.read<String>('account_id'): r.read<String>('d'),
+    };
+    final statements = await latest(
+      'SELECT account_id, MAX(date) AS d FROM balance_checks WHERE deleted = 0 AND date <= ? '
+      'GROUP BY account_id',
+    );
+    final imported = await latest(
+      'SELECT p.account_id, MAX(e.date) AS d FROM postings p JOIN entries e ON e.id = p.entry_id '
+      'WHERE e.deleted = 0 AND e.import_ref IS NOT NULL AND e.date <= ? GROUP BY p.account_id',
+    );
+    final entries = await latest(
+      'SELECT p.account_id, MAX(e.date) AS d FROM postings p JOIN entries e ON e.id = p.entry_id '
+      'WHERE e.deleted = 0 AND e.date <= ? GROUP BY p.account_id',
+    );
+    return [
+      for (final a in reports.accounts.values)
+        if ((a.kind == 'asset' || a.kind == 'liability') && !a.closed && !a.deleted && a.parentId == null)
+          (
+            id: a.id,
+            name: a.name,
+            statement: statements[a.id],
+            imported: imported[a.id],
+            entry: entries[a.id],
+          ),
+    ];
+  }
+
+  /// Every expense posting from [from] to today, in base currency at the
+  /// entry day's rate (any entry currency; ones with no rate are skipped).
+  Future<List<SpendItem>> spendItems(String from) async {
+    final rows = await db
+        .customSelect(
+          'SELECT e.date, e.payee, e.memo, e.currency, p.account_id, p.value FROM postings p '
+          'JOIN entries e ON e.id = p.entry_id JOIN accounts a ON a.id = p.account_id '
+          "WHERE e.deleted = 0 AND e.date BETWEEN ? AND ? AND a.kind = 'expense'",
+          variables: [Variable(from), Variable(today)],
+          readsFrom: {db.entries, db.postings, db.accounts},
+        )
+        .get();
+    return [
+      for (final r in rows)
+        if (reports.prices.convert(
+              r.read<int>('value'),
+              r.read<String>('currency'),
+              base,
+              r.read<String>('date'),
+            )
+            case final v?)
+          SpendItem(
+            r.read<String>('date'),
+            (r.read<String>('payee').trim().isEmpty ? r.read<String>('memo') : r.read<String>('payee'))
+                .trim(),
+            v,
+            r.read<String>('account_id'),
+          ),
+    ];
+  }
+
+  /// Average monthly spending per expense category over the last [months]
+  /// complete months, in base currency; with the months it covers.
+  Future<({Map<String, int> byCategory, String from, String to})> monthlyByCategory({int months = 3}) async {
+    final from = monthStart(addMonths(today, -months));
+    final to = addDays(monthStart(today), -1);
+    final pnl = await reports.incomeStatement(from, to);
+    return (byCategory: {for (final l in pnl.expenses) l.account.id: l.amount ~/ months}, from: from, to: to);
   }
 
   Future<Metrics> metrics() async {

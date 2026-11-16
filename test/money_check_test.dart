@@ -11,6 +11,7 @@ import 'package:artha/modules/finance/reports/reports.dart';
 import 'package:brahma_core/brahma_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'screenshots_test.dart' show seedHousehold;
 import 'support.dart';
 
 /// Complete months ending with [last] (yyyy-MM), oldest first.
@@ -545,6 +546,70 @@ void main() {
       );
       expect(by['Card']!.statement, '2026-09-30');
       expect((by['Current']!.nudge, by['Card']!.nudge), (true, true));
+    });
+
+    group('ISA allowance used', () {
+      Future<Metrics> metricsOn(String day) async => (await engine(day)).metrics();
+
+      test('only new money paid in this tax year counts', () async {
+        final bank = await ledger.saveAccount(name: 'Current', subtype: 'current', commodityId: 'GBP');
+        final cashIsa = await ledger.saveAccount(name: 'Cash ISA', subtype: 'isa_cash', commodityId: 'GBP');
+        final shares = await ledger.saveAccount(name: 'S&S ISA', subtype: 'isa_stocks', commodityId: 'GBP');
+        Future<void> move(String date, String from, String to, int amount) => ledger.saveEntry(
+          transferEntry(date: date, currency: 'GBP', fromId: from, toId: to, fromAmount: amount),
+        );
+        // Opening balances, even inside the tax year, are not subscriptions.
+        for (final (acc, amount) in [(bank, 5000000), (cashIsa, 1150000), (shares, 1600000)]) {
+          await ledger.saveEntry(
+            simpleEntry(
+              date: '2026-05-01',
+              currency: 'GBP',
+              accountId: acc,
+              categoryId: openingBalancesId,
+              amount: -amount,
+            ),
+          );
+        }
+        await move('2026-04-05', bank, cashIsa, 50000); // last day of the previous tax year
+        await move('2026-04-06', bank, cashIsa, 20000); // first day of this one
+        await move('2026-06-01', bank, cashIsa, 300000);
+        await move('2026-07-01', cashIsa, shares, 100000); // ISA to ISA
+        await ledger.saveEntry(
+          simpleEntry(
+            date: '2026-08-01',
+            currency: 'GBP',
+            accountId: cashIsa,
+            categoryId: 'cat.interest',
+            amount: -4000,
+          ),
+        );
+        expect((await metricsOn('2026-11-16')).isaUsed, 320000);
+        // On 5 April the previous year's payment still counts; on 6 April nothing yet.
+        expect((await metricsOn('2026-04-05')).isaUsed, 50000);
+        expect((await metricsOn('2027-04-06')).isaUsed, 0);
+      });
+
+      test('over the allowance is reported plainly', () async {
+        final bank = await ledger.saveAccount(name: 'Current', subtype: 'current', commodityId: 'GBP');
+        final isa = await ledger.saveAccount(name: 'Cash ISA', subtype: 'isa_cash', commodityId: 'GBP');
+        await ledger.saveEntry(
+          transferEntry(date: '2026-06-01', currency: 'GBP', fromId: bank, toId: isa, fromAmount: 2100000),
+        );
+        final e = await engine('2026-11-16');
+        expect((await e.metrics()).isaUsed, 2100000);
+        final over = (await e.generate()).where((i) => i.kind == 'isa_over').single;
+        expect(over.title, 'Over the ISA allowance by £1000');
+        expect(over.severity, 'action');
+      });
+
+      test('the screenshot household has paid nothing new in', () async {
+        await db.close();
+        db = await openTestDatabase();
+        ledger = Ledger(await Store.open(db));
+        await seedHousehold(ledger);
+        final m = await (await engine(today())).metrics();
+        expect(m.isaUsed, 0);
+      });
     });
 
     test('monthly spend per category averages complete months', () async {

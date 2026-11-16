@@ -441,6 +441,9 @@ class InsightEngine {
     }
     if (limits > 0) m.creditUtilisation = owed / limits;
 
+    // ISA subscriptions: money paid in from outside the ISAs this UK tax
+    // year. Opening balances (an equity leg), transfers between ISAs and
+    // interest or dividends earned inside them are not subscriptions.
     if (reports.accounts.values.any((a) => _isa.contains(a.subtype))) {
       final r = await db
           .customSelect(
@@ -449,7 +452,7 @@ class InsightEngine {
             "WHERE e.deleted = 0 AND e.date BETWEEN ? AND ? AND a.subtype IN ('isa_cash','isa_stocks','lisa','isa_ifi') "
             "AND a.commodity_id = 'GBP' AND p.amount > 0 AND NOT EXISTS (SELECT 1 FROM postings q "
             'JOIN accounts b ON b.id = q.account_id WHERE q.entry_id = e.id AND q.id <> p.id '
-            "AND (b.subtype IN ('isa_cash','isa_stocks','lisa','isa_ifi','security') OR b.kind = 'income'))",
+            "AND (b.subtype IN ('isa_cash','isa_stocks','lisa','isa_ifi','security') OR b.kind IN ('income', 'equity')))",
             variables: [Variable(ukTaxYearStart(today)), Variable(today)],
             readsFrom: {db.postings, db.entries, db.accounts},
           )
@@ -587,6 +590,21 @@ class InsightEngine {
       final left = UkAllowances.isa - isaUsed;
       final yearEnd = addDays(addMonths(ukTaxYearStart(today), 12), -1);
       final daysLeft = daysBetween(yearEnd, today);
+      if (left < 0) {
+        out.add(
+          Insight(
+            'isa_over/${UkAllowances.taxYear}',
+            'isa_over',
+            'Over the ISA allowance by £${-left ~/ 100}',
+            'Paid into ISAs this tax year: £${isaUsed ~/ 100} of £${UkAllowances.isa ~/ 100}. If this is new '
+                'money, not transfers or opening balances, tell your ISA provider: HMRC can remove the tax '
+                'relief on the extra.',
+            severity: 'action',
+            score: 0.9,
+            data: {'used': isaUsed, 'over': -left},
+          ),
+        );
+      }
       if (left > 0 && daysLeft <= 90) {
         out.add(
           Insight(

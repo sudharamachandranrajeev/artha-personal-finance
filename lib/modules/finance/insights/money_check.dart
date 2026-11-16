@@ -526,9 +526,10 @@ const freshnessChoices = [14, 21, 35, 45, 60, 90];
 
 /// Per account: the newest statement balance or imported row (an entry typed
 /// by hand when there is neither), and whether it is older than [nudgeDays].
-/// Accounts with no data at all are not nagged about.
+/// Only accounts marked [nudge] (everyday ones that get monthly statements)
+/// are nagged about, and never one with no data at all.
 List<Freshness> accountFreshness(
-  List<({String id, String name, String? statement, String? imported, String? entry})> accounts,
+  List<({String id, String name, String? statement, String? imported, String? entry, bool nudge})> accounts,
   String today,
   int nudgeDays,
 ) {
@@ -550,7 +551,7 @@ List<Freshness> accountFreshness(
         date: date,
         source: source,
         days: days,
-        stale: days != null && days > nudgeDays,
+        stale: a.nudge && days != null && days > nudgeDays,
       ),
     );
   }

@@ -280,11 +280,25 @@ void main() {
     test('newest statement or import; a hand entry when neither; nothing is not nagged', () {
       final f = accountFreshness(
         [
-          (id: 'a', name: 'Old', statement: '2026-10-01', imported: '2026-09-20', entry: '2026-10-03'),
-          (id: 'b', name: 'Fresh', statement: '2026-10-01', imported: '2026-11-10', entry: '2026-11-10'),
-          (id: 'c', name: 'Hand', statement: null, imported: null, entry: '2026-11-15'),
-          (id: 'd', name: 'Empty', statement: null, imported: null, entry: null),
-          (id: 'e', name: 'Ahead', statement: null, imported: '2026-11-20', entry: null),
+          (
+            id: 'a',
+            name: 'Old',
+            statement: '2026-10-01',
+            imported: '2026-09-20',
+            entry: '2026-10-03',
+            nudge: true,
+          ),
+          (
+            id: 'b',
+            name: 'Fresh',
+            statement: '2026-10-01',
+            imported: '2026-11-10',
+            entry: '2026-11-10',
+            nudge: true,
+          ),
+          (id: 'c', name: 'Hand', statement: null, imported: null, entry: '2026-11-15', nudge: true),
+          (id: 'd', name: 'Empty', statement: null, imported: null, entry: null, nudge: true),
+          (id: 'e', name: 'Ahead', statement: null, imported: '2026-11-20', entry: null, nudge: true),
         ],
         '2026-11-16',
         35,
@@ -300,12 +314,19 @@ void main() {
       // The nudge threshold is the user's.
       expect(
         accountFreshness(
-          [(id: 'a', name: 'x', statement: '2026-10-01', imported: null, entry: null)],
+          [(id: 'a', name: 'x', statement: '2026-10-01', imported: null, entry: null, nudge: true)],
           '2026-11-16',
           60,
         ).single.stale,
         isFalse,
       );
+      // A pension or property is shown with its age but never nagged about.
+      final pension = accountFreshness(
+        [(id: 'p', name: 'Pension', statement: null, imported: null, entry: '2025-01-01', nudge: false)],
+        '2026-11-16',
+        35,
+      ).single;
+      expect((pension.stale, pension.label), (false, 'Last entry 684 days ago'));
     });
   });
 
@@ -519,6 +540,7 @@ void main() {
         ('2026-10-01', '2026-11-01', null),
       );
       expect(by['Card']!.statement, '2026-09-30');
+      expect((by['Current']!.nudge, by['Card']!.nudge), (true, true));
     });
 
     test('monthly spend per category averages complete months', () async {

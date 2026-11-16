@@ -286,6 +286,9 @@ class InsightEngine {
   final Map<String, int> targets;
   String get base => reports.base;
 
+  /// Account types that get a statement every month; only these are nudged
+  /// when their data gets old.
+  static const _statemented = {'current', 'savings', 'cash', 'isa_cash', 'forex', 'credit_card', 'overdraft'};
   static const _liquid = {'current', 'savings', 'cash', 'isa_cash', 'forex'};
   static const _isa = {'isa_cash', 'isa_stocks', 'lisa', 'isa_ifi'};
 
@@ -326,7 +329,7 @@ class InsightEngine {
   /// Per open account of the user's own (not holdings inside an account):
   /// the newest statement balance, imported row and any entry, on or before
   /// today.
-  Future<List<({String id, String name, String? statement, String? imported, String? entry})>>
+  Future<List<({String id, String name, String? statement, String? imported, String? entry, bool nudge})>>
   freshnessRows() async {
     Future<Map<String, String>> latest(String sql) async => {
       for (final r
@@ -360,6 +363,7 @@ class InsightEngine {
             statement: statements[a.id],
             imported: imported[a.id],
             entry: entries[a.id],
+            nudge: _statemented.contains(a.subtype),
           ),
     ];
   }

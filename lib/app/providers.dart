@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import '../db/database.dart';
 import '../modules/finance/domain/ledger.dart';
 import '../modules/finance/fx/fx_service.dart';
+import '../modules/finance/insights/forecast.dart' show ForecastEvent;
 import '../modules/finance/insights/insights.dart';
+import '../modules/finance/insights/money_check.dart';
 import '../modules/finance/insights/risk.dart';
 import '../modules/finance/insights/world.dart';
 import '../modules/finance/portfolio/portfolio.dart';
@@ -340,4 +342,94 @@ final recurringRowsProvider = FutureProvider<List<RecurringRow>>((ref) {
 final plannedProvider = FutureProvider<List<PlannedRow>>((ref) {
   ref.watch(revisionProvider);
   return ref.watch(sessionProvider).ledger.planned();
+});
+
+/// Everything the money check shows: spending efficiency, the emergency
+/// cushion, freshness per account and the weekly recap. All worked out on
+/// the device from the ledger; the rate note uses the last world download.
+class MoneyCheck {
+  MoneyCheck({
+    required this.fixedCost,
+    required this.fixedCostRise,
+    required this.creep,
+    required this.lifestyle,
+    required this.ons,
+    required this.benchmarks,
+    required this.cuts,
+    required this.cushion,
+    required this.freshness,
+    required this.nudgeDays,
+    required this.recap,
+  });
+  final Measure fixedCost;
+  final Measure fixedCostRise;
+  final Creep creep;
+  final Measure lifestyle;
+  final Measure ons;
+  final List<Benchmark> benchmarks;
+  final List<CutCard> cuts;
+  final Cushion cushion;
+  final List<Freshness> freshness;
+  final int nudgeDays;
+  final WeeklyRecap recap;
+  List<Measure> get measures => [cushion.measure, fixedCost, fixedCostRise, creep.measure, lifestyle, ons];
+}
+
+final moneyCheckProvider = FutureProvider<MoneyCheck>((ref) async {
+  ref.watch(revisionProvider);
+  final s = ref.watch(sessionProvider);
+  final day = ref.watch(todayProvider);
+  final reports = await ref.watch(reportsProvider.future);
+  final data = await ref.watch(insightsProvider.future);
+  final world = await ref.watch(worldProvider.future);
+  final planned = await ref.watch(plannedProvider.future);
+  final engine = InsightEngine(s.db, reports, await ref.watch(portfolioProvider.future), day);
+  final target = await s.ledger.pref<int>(cushionTargetKey, defaultCushionTarget);
+  final nudge = await s.ledger.pref<int>(freshnessDaysKey, defaultFreshnessDays);
+  final nudgeDays = nudge > 0 ? nudge : defaultFreshnessDays;
+
+  // Complete months only: the running one is left out.
+  final complete = (await reports.monthlyFlows(day, months: 25)).sublist(0, 24);
+  final m = data.metrics;
+  final creep = subscriptionCreep(data.recurring, await engine.transactions(), day);
+  final cats = await engine.monthlyByCategory();
+  final benchmarks = compareWithOns(cats.byCategory, reports.base);
+  final cushion = emergencyCushion(
+    liquid: m.liquid,
+    essentialMonthly: m.monthlyEssential,
+    spendMonthly: m.monthlySpend,
+    target: cushionTargets.contains(target) ? target : defaultCushionTarget,
+    market: world.market,
+    asOf: day,
+  );
+  final freshness = accountFreshness(await engine.freshnessRows(), day, nudgeDays);
+  final from = weekStart(day).compareTo(monthStart(day)) < 0 ? weekStart(day) : monthStart(day);
+  return MoneyCheck(
+    fixedCost: fixedCostRatio(complete.sublist(18), data.recurring, reports.essential),
+    fixedCostRise: fixedCostRise(complete),
+    creep: creep,
+    lifestyle: lifestyleInflation(complete),
+    ons: onsMeasure(
+      benchmarks,
+      reports.base,
+      'Your average ${niceDate(cats.from).substring(2)} to ${niceDate(cats.to).substring(2)}',
+    ),
+    benchmarks: benchmarks,
+    cuts: cutThis(creep, benchmarks, reports.base),
+    cushion: cushion,
+    freshness: freshness,
+    nudgeDays: nudgeDays,
+    recap: weeklyRecap(
+      items: await engine.spendItems(from),
+      today: day,
+      budgets: await s.ledger.budgets(),
+      usualMonth: m.monthlySpend,
+      recurring: data.recurring,
+      oneOffs: [for (final p in planned) ForecastEvent(p.date, p.label, p.amount, oneOff: true, id: p.id)],
+      base: reports.base,
+      freshness: freshness,
+      cushion: cushion,
+      creep: creep,
+    ),
+  );
 });

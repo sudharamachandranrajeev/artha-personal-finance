@@ -10,6 +10,7 @@ import '../insights/catalogue.dart';
 import '../insights/insights.dart';
 import '../insights/risk.dart';
 import 'assistant_page.dart';
+import 'money_check_cards.dart';
 import 'recurring_page.dart';
 import 'risk_page.dart';
 import 'world_card.dart';
@@ -138,6 +139,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                     ),
                   ],
                 ),
+                const SpendingCheck(),
                 if (m.isaUsed != null)
                   SectionCard(
                     title: 'ISA allowance ${UkAllowances.taxYear}',
@@ -151,10 +153,21 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${money(m.isaUsed!, 'GBP')} of ${money(UkAllowances.isa, 'GBP')} used; '
+                          '${money(m.isaUsed!, 'GBP')} of ${money(UkAllowances.isa, 'GBP')} paid in this tax year; '
                           '${money((UkAllowances.isa - m.isaUsed!).clamp(0, UkAllowances.isa), 'GBP')} left '
                           'until 5 April.',
                         ),
+                        if (m.isaUsed! > UkAllowances.isa) ...[
+                          const SizedBox(height: 8),
+                          StatusLabel(
+                            Status.serious,
+                            'Over the allowance by ${money(m.isaUsed! - UkAllowances.isa, 'GBP')}.',
+                          ),
+                          const Text(
+                            'Check these entries are new money, not transfers or opening balances. If they are, '
+                            'tell your ISA provider now: HMRC can remove the tax relief on the extra.',
+                          ),
+                        ],
                       ],
                     ),
                   ),

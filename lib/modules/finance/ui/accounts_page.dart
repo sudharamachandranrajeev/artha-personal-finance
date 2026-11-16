@@ -8,6 +8,7 @@ import '../../../ui/components.dart';
 import '../../../ui/theme.dart';
 import '../domain/accounting.dart';
 import '../domain/ledger.dart';
+import '../insights/money_check.dart' show Freshness;
 import '../portfolio/portfolio.dart';
 import '../reports/reports.dart';
 import 'common.dart';
@@ -41,6 +42,9 @@ class _AccountsPageState extends ConsumerState<AccountsPage> {
       for (final t in ref.watch(dashboardProvider).value?.tally ?? <TallyRow>[]) t.account.id: t,
     };
     final base = ref.watch(setupProvider).value ?? 'GBP';
+    final fresh = {
+      for (final f in ref.watch(moneyCheckProvider).value?.freshness ?? <Freshness>[]) f.accountId: f,
+    };
     return PageScaffold(
       title: 'Accounts',
       banner: 'page.accounts',
@@ -162,6 +166,7 @@ class _AccountsPageState extends ConsumerState<AccountsPage> {
                     : null,
                 tallied: t?.tallied,
                 hasTally: t != null,
+                fresh: fresh[a.id],
                 solid: i.isOdd,
                 onTap: () =>
                     Navigator.push(context, MaterialPageRoute(builder: (_) => AccountDetailPage(a.id))),
@@ -559,6 +564,7 @@ class _AccountTile extends StatelessWidget {
     this.inBase,
     this.tallied,
     this.hasTally = false,
+    this.fresh,
     this.solid = false,
     required this.onTap,
   });
@@ -567,6 +573,9 @@ class _AccountTile extends StatelessWidget {
   final String? inBase;
   final bool? tallied;
   final bool hasTally;
+
+  /// How old the newest statement or import is.
+  final Freshness? fresh;
   final bool solid;
   final VoidCallback onTap;
 
@@ -619,6 +628,30 @@ class _AccountTile extends StatelessWidget {
                     color: skin.muted,
                   ).merge(tabular),
                 ),
+              if (fresh case final f?) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      f.stale ? Icons.history_toggle_off : Icons.update,
+                      size: 13,
+                      color: f.stale ? Status.warning.color : skin.muted,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        f.label,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: f.stale ? FontWeight.w600 : FontWeight.w500,
+                          color: f.stale ? Status.warning.color : skin.muted,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

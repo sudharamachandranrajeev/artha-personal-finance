@@ -265,7 +265,8 @@ void main() {
     await app.enter('Amount (GBP)', '450');
     await app.tapText('Save');
     expect(find.text('Car insurance'), findsOneWidget);
-    expect(find.text('-£450.00'), findsOneWidget);
+    // In the forecast list, and among this week's bills (planned for today).
+    expect(find.text('-£450.00'), findsNWidgets(2));
     expect(find.textContaining('1 planned one-off and'), findsOneWidget);
     await app.tapText('Car insurance');
     await app.tapText('Delete');

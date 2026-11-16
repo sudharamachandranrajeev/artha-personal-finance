@@ -83,6 +83,88 @@ class UkRates {
   static bool stale(String today) => daysBetween(today, asOf) > 60;
 }
 
+/// One spending group from ONS Family Spending: the average UK household's
+/// weekly spend ([weekly], pence) and the Artha categories that fall in it.
+class OnsLine {
+  const OnsLine(
+    this.id,
+    this.label,
+    this.weekly,
+    this.categories, {
+    this.confirmed = true,
+    this.note = '',
+    this.cuttable = true,
+  });
+  final String id;
+  final String label;
+  final int weekly;
+  final Set<String> categories;
+
+  /// False when the figure comes from a secondary ONS source not yet checked
+  /// against the workbook; the app says so next to it.
+  final bool confirmed;
+  final String note;
+
+  /// False when the ONS average is no fair target to cut towards (housing:
+  /// it averages in outright owners and leaves mortgages out).
+  final bool cuttable;
+
+  /// Per month: weekly x 52 / 12.
+  int get monthly => (weekly * 52 / 12).round();
+}
+
+/// ONS Family Spending in the UK, financial year ending 2025 (April 2024 to
+/// March 2025), published 11 June 2026. Average across all UK households,
+/// not adjusted for size, income or region. Every figure was checked on
+/// [asOf] against the primary source: Family Spending Workbook 1 (detailed
+/// expenditure and trends), Table A1, column "Average weekly expenditure all
+/// households (£)". Refresh once a year when the next release comes out.
+class OnsFamilySpending {
+  static const asOf = '2026-11-16';
+  static const published = '2026-06-11';
+  static const period = 'April 2024 to March 2025';
+  static const sourceLabel =
+      'ONS Family Spending, April 2024 to March 2025: Workbook 1, Table A1 (average weekly expenditure, '
+      'all UK households)';
+  static const url =
+      'https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/expenditure/'
+      'datasets/familyspendingworkbook1detailedexpenditureandtrends';
+  static const bulletinUrl =
+      'https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/expenditure/'
+      'bulletins/familyspendingintheuk/april2024tomarch2025';
+
+  /// Table A1 "Total expenditure" (£676.60).
+  static const totalWeekly = 67660;
+  static const lines = [
+    // Table A1, COICOP 4 "Housing (net), fuel & power": £118.40.
+    OnsLine(
+      'housing',
+      'Housing, fuel and power',
+      11840,
+      {'cat.housing', 'cat.utilities'},
+      note:
+          'ONS counts rent net of housing benefit and leaves mortgage interest and council tax out '
+          '(they are in its category 13).',
+      cuttable: false,
+    ),
+    // Table A1, COICOP 7 "Transport": £96.40.
+    OnsLine('transport', 'Transport', 9640, {'cat.transport', 'cat.car'}),
+    // Table A1, COICOP 9 "Recreation & culture": £82.10; includes package
+    // holidays (9.6, £35.40).
+    OnsLine('recreation', 'Recreation and culture', 8210, {
+      'cat.entertainment',
+      'cat.subscriptions',
+      'cat.travel',
+    }),
+    // Table A1, COICOP 1 "Food & non-alcoholic drinks": £73.70 (eating out
+    // is COICOP 11, not compared).
+    OnsLine('food', 'Food and drink at home', 7370, {'cat.groceries'}),
+  ];
+
+  /// More than 15 months old: a newer release is likely out.
+  static bool stale(String today) => daysBetween(today, asOf) > 456;
+}
+
 /// First day of the UK tax year containing [iso] (yyyy-MM-dd).
 String ukTaxYearStart(String iso) {
   final y = int.parse(iso.substring(0, 4));

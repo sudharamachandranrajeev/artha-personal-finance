@@ -10,6 +10,7 @@ import '../portfolio/portfolio.dart';
 import '../reports/reports.dart';
 import 'catalogue.dart';
 import 'categorizer.dart';
+import 'money_check.dart' show SpendItem;
 
 /// A categorised transaction as the pattern finders see it. [amount] is the
 /// money flow: negative out, positive in (base currency).
@@ -285,6 +286,9 @@ class InsightEngine {
   final Map<String, int> targets;
   String get base => reports.base;
 
+  /// Account types that get a statement every month; only these are nudged
+  /// when their data gets old.
+  static const _statemented = {'current', 'savings', 'cash', 'isa_cash', 'forex', 'credit_card', 'overdraft'};
   static const _liquid = {'current', 'savings', 'cash', 'isa_cash', 'forex'};
   static const _isa = {'isa_cash', 'isa_stocks', 'lisa', 'isa_ifi'};
 
@@ -322,6 +326,88 @@ class InsightEngine {
     );
   }
 
+  /// Per open account of the user's own (not holdings inside an account):
+  /// the newest statement balance, imported row and any entry, on or before
+  /// today.
+  Future<List<({String id, String name, String? statement, String? imported, String? entry, bool nudge})>>
+  freshnessRows() async {
+    Future<Map<String, String>> latest(String sql) async => {
+      for (final r
+          in await db
+              .customSelect(
+                sql,
+                variables: [Variable(today)],
+                readsFrom: {db.entries, db.postings, db.balanceChecks},
+              )
+              .get())
+        r.read<String>('account_id'): r.read<String>('d'),
+    };
+    final statements = await latest(
+      'SELECT account_id, MAX(date) AS d FROM balance_checks WHERE deleted = 0 AND date <= ? '
+      'GROUP BY account_id',
+    );
+    final imported = await latest(
+      'SELECT p.account_id, MAX(e.date) AS d FROM postings p JOIN entries e ON e.id = p.entry_id '
+      'WHERE e.deleted = 0 AND e.import_ref IS NOT NULL AND e.date <= ? GROUP BY p.account_id',
+    );
+    final entries = await latest(
+      'SELECT p.account_id, MAX(e.date) AS d FROM postings p JOIN entries e ON e.id = p.entry_id '
+      'WHERE e.deleted = 0 AND e.date <= ? GROUP BY p.account_id',
+    );
+    return [
+      for (final a in reports.accounts.values)
+        if ((a.kind == 'asset' || a.kind == 'liability') && !a.closed && !a.deleted && a.parentId == null)
+          (
+            id: a.id,
+            name: a.name,
+            statement: statements[a.id],
+            imported: imported[a.id],
+            entry: entries[a.id],
+            nudge: _statemented.contains(a.subtype),
+          ),
+    ];
+  }
+
+  /// Every expense posting from [from] to today, in base currency at the
+  /// entry day's rate (any entry currency; ones with no rate are skipped).
+  Future<List<SpendItem>> spendItems(String from) async {
+    final rows = await db
+        .customSelect(
+          'SELECT e.date, e.payee, e.memo, e.currency, p.account_id, p.value FROM postings p '
+          'JOIN entries e ON e.id = p.entry_id JOIN accounts a ON a.id = p.account_id '
+          "WHERE e.deleted = 0 AND e.date BETWEEN ? AND ? AND a.kind = 'expense'",
+          variables: [Variable(from), Variable(today)],
+          readsFrom: {db.entries, db.postings, db.accounts},
+        )
+        .get();
+    return [
+      for (final r in rows)
+        if (reports.prices.convert(
+              r.read<int>('value'),
+              r.read<String>('currency'),
+              base,
+              r.read<String>('date'),
+            )
+            case final v?)
+          SpendItem(
+            r.read<String>('date'),
+            (r.read<String>('payee').trim().isEmpty ? r.read<String>('memo') : r.read<String>('payee'))
+                .trim(),
+            v,
+            r.read<String>('account_id'),
+          ),
+    ];
+  }
+
+  /// Average monthly spending per expense category over the last [months]
+  /// complete months, in base currency; with the months it covers.
+  Future<({Map<String, int> byCategory, String from, String to})> monthlyByCategory({int months = 3}) async {
+    final from = monthStart(addMonths(today, -months));
+    final to = addDays(monthStart(today), -1);
+    final pnl = await reports.incomeStatement(from, to);
+    return (byCategory: {for (final l in pnl.expenses) l.account.id: l.amount ~/ months}, from: from, to: to);
+  }
+
   Future<Metrics> metrics() async {
     final m = Metrics();
     final bs = await reports.balanceSheet(today);
@@ -355,6 +441,9 @@ class InsightEngine {
     }
     if (limits > 0) m.creditUtilisation = owed / limits;
 
+    // ISA subscriptions: money paid in from outside the ISAs this UK tax
+    // year. Opening balances (an equity leg), transfers between ISAs and
+    // interest or dividends earned inside them are not subscriptions.
     if (reports.accounts.values.any((a) => _isa.contains(a.subtype))) {
       final r = await db
           .customSelect(
@@ -363,7 +452,7 @@ class InsightEngine {
             "WHERE e.deleted = 0 AND e.date BETWEEN ? AND ? AND a.subtype IN ('isa_cash','isa_stocks','lisa','isa_ifi') "
             "AND a.commodity_id = 'GBP' AND p.amount > 0 AND NOT EXISTS (SELECT 1 FROM postings q "
             'JOIN accounts b ON b.id = q.account_id WHERE q.entry_id = e.id AND q.id <> p.id '
-            "AND (b.subtype IN ('isa_cash','isa_stocks','lisa','isa_ifi','security') OR b.kind = 'income'))",
+            "AND (b.subtype IN ('isa_cash','isa_stocks','lisa','isa_ifi','security') OR b.kind IN ('income', 'equity')))",
             variables: [Variable(ukTaxYearStart(today)), Variable(today)],
             readsFrom: {db.postings, db.entries, db.accounts},
           )
@@ -501,6 +590,21 @@ class InsightEngine {
       final left = UkAllowances.isa - isaUsed;
       final yearEnd = addDays(addMonths(ukTaxYearStart(today), 12), -1);
       final daysLeft = daysBetween(yearEnd, today);
+      if (left < 0) {
+        out.add(
+          Insight(
+            'isa_over/${UkAllowances.taxYear}',
+            'isa_over',
+            'Over the ISA allowance by £${-left ~/ 100}',
+            'Paid into ISAs this tax year: £${isaUsed ~/ 100} of £${UkAllowances.isa ~/ 100}. If this is new '
+                'money, not transfers or opening balances, tell your ISA provider: HMRC can remove the tax '
+                'relief on the extra.',
+            severity: 'action',
+            score: 0.9,
+            data: {'used': isaUsed, 'over': -left},
+          ),
+        );
+      }
       if (left > 0 && daysLeft <= 90) {
         out.add(
           Insight(

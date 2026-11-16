@@ -18,6 +18,17 @@ class ForecastEvent {
   final String? id;
 }
 
+/// One day of a forecast: the expected balance at its end, the payments and
+/// receipts due that day and the change from the day before.
+class ForecastDay {
+  const ForecastDay(this.date, this.balance, this.events, {this.lowest = false, this.change = 0});
+  final String date;
+  final int balance;
+  final List<ForecastEvent> events;
+  final bool lowest;
+  final int change;
+}
+
 /// Liquid money day by day over the next [days], in the base currency.
 class CashForecast {
   CashForecast(this.today, this.opening, this.balances, this.events, this.everydayPerMonth);
@@ -38,6 +49,27 @@ class CashForecast {
   int get days => balances.length;
   String dateAt(int i) => addDays(today, i + 1);
   int get closing => balances.isEmpty ? opening : balances.last;
+
+  /// Every forecast day with its closing balance and the payments due, for
+  /// the calendar view. Days run from tomorrow; [ForecastDay.lowest] marks
+  /// the first lowest day.
+  List<ForecastDay> calendar() {
+    final byDay = <String, List<ForecastEvent>>{};
+    for (final e in events) {
+      byDay.putIfAbsent(e.date, () => []).add(e);
+    }
+    final low = lowest.date;
+    return [
+      for (var i = 0; i < balances.length; i++)
+        ForecastDay(
+          dateAt(i),
+          balances[i],
+          byDay[dateAt(i)] ?? const [],
+          lowest: dateAt(i) == low,
+          change: balances[i] - (i == 0 ? opening : balances[i - 1]),
+        ),
+    ];
+  }
 
   /// The lowest day, the earliest one on a tie.
   ({String date, int balance}) get lowest {

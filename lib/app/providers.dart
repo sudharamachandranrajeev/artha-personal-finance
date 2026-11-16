@@ -350,6 +350,7 @@ final plannedProvider = FutureProvider<List<PlannedRow>>((ref) {
 class MoneyCheck {
   MoneyCheck({
     required this.fixedCost,
+    required this.fixedCostRise,
     required this.creep,
     required this.lifestyle,
     required this.ons,
@@ -361,6 +362,7 @@ class MoneyCheck {
     required this.recap,
   });
   final Measure fixedCost;
+  final Measure fixedCostRise;
   final Creep creep;
   final Measure lifestyle;
   final Measure ons;
@@ -370,7 +372,7 @@ class MoneyCheck {
   final List<Freshness> freshness;
   final int nudgeDays;
   final WeeklyRecap recap;
-  List<Measure> get measures => [cushion.measure, fixedCost, creep.measure, lifestyle, ons];
+  List<Measure> get measures => [cushion.measure, fixedCost, fixedCostRise, creep.measure, lifestyle, ons];
 }
 
 final moneyCheckProvider = FutureProvider<MoneyCheck>((ref) async {
@@ -404,6 +406,7 @@ final moneyCheckProvider = FutureProvider<MoneyCheck>((ref) async {
   final from = weekStart(day).compareTo(monthStart(day)) < 0 ? weekStart(day) : monthStart(day);
   return MoneyCheck(
     fixedCost: fixedCostRatio(complete.sublist(18), data.recurring, reports.essential),
+    fixedCostRise: fixedCostRise(complete),
     creep: creep,
     lifestyle: lifestyleInflation(complete),
     ons: onsMeasure(

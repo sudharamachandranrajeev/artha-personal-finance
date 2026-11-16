@@ -180,7 +180,13 @@ class SpendingCheck extends ConsumerWidget {
         TileGrid(
           minWidth: 300,
           children: [
-            for (final m in [check.fixedCost, check.creep.measure, check.lifestyle, check.ons])
+            for (final m in [
+              check.fixedCost,
+              check.fixedCostRise,
+              check.creep.measure,
+              check.lifestyle,
+              check.ons,
+            ])
               MeasureCard(m, cur),
           ],
         ),

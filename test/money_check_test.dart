@@ -71,6 +71,41 @@ void main() {
     });
   });
 
+  group('fixed-cost rise', () {
+    List<(int, int, int)> year(int essential) => [for (var i = 0; i < 12; i++) (300000, 200000, essential)];
+
+    test('a rise of 5 points or more against a year earlier is flagged', () {
+      // A year ago 40% of income went on essentials; now 47%.
+      final m = fixedCostRise(months('2026-10', [...year(120000), ...year(141000)]));
+      expect(m.value, closeTo(0.07, 1e-9));
+      expect(m.display, '+7.0 pts');
+      expect(m.verdict, Verdict.flag);
+      expect(m.note, contains('7.0 points more'));
+    });
+
+    test('a small rise is watched and a fall is good', () {
+      final small = fixedCostRise(months('2026-10', [...year(120000), ...year(129000)]));
+      expect(small.value, closeTo(0.03, 1e-9));
+      expect(small.verdict, Verdict.watch);
+      final fall = fixedCostRise(months('2026-10', [...year(150000), ...year(120000)]));
+      expect(fall.verdict, Verdict.good);
+      expect(fall.display, '-10.0 pts');
+    });
+
+    test('too little history says not enough data', () {
+      for (final flows in [
+        months('2026-10', year(120000)),
+        months('2026-10', [...year(120000).take(2), ...year(130000)]), // 14 months
+        <MonthFlow>[],
+      ]) {
+        final m = fixedCostRise(flows);
+        expect(m.value, isNull);
+        expect(m.verdict, Verdict.unknown);
+        expect(m.note, startsWith('Not enough data'));
+      }
+    });
+  });
+
   group('subscription creep', () {
     const today = '2026-11-16';
     List<Txn> monthly(String text, int amount, String first, int n, {int? lastAmount}) => [

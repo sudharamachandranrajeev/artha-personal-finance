@@ -140,6 +140,59 @@ Measure fixedCostRatio(List<MonthFlow> complete, List<Recurring> recurring, Set<
   );
 }
 
+/// Change in the fixed-cost share of income against the same three months a
+/// year earlier. Recurring payments of a year ago cannot be rebuilt from
+/// the history kept, so both periods use essential spending / income, the
+/// part known for both. A rise of 5 points or more is flagged.
+Measure fixedCostRise(List<MonthFlow> complete) {
+  final active = activeMonths(complete);
+  final recent = active.length > 3 ? active.sublist(active.length - 3) : active;
+  final byMonth = {for (final f in complete) f.month: f};
+  final then = [for (final f in recent) ?byMonth[addMonths('${f.month}-01', -12).substring(0, 7)]];
+  int sum(List<MonthFlow> xs, int Function(MonthFlow) f) => xs.fold(0, (s, x) => s + f(x));
+  final enough =
+      recent.length == 3 && then.length == 3 && active.length >= 15 && sum(then, (f) => f.income) > 0;
+  final incomeNow = sum(recent, (f) => f.income), incomeThen = sum(then, (f) => f.income);
+  final now = enough && incomeNow > 0 ? sum(recent, (f) => f.essential) / incomeNow : null;
+  final before = enough ? sum(then, (f) => f.essential) / incomeThen : null;
+  final rise = now != null && before != null ? now - before : null;
+  String pts(double v) => '${v >= 0 ? '+' : ''}${(v * 100).toStringAsFixed(1)} pts';
+  return Measure(
+    id: 'fixed_cost_rise',
+    title: 'Fixed costs vs a year ago',
+    display: rise == null ? '–' : pts(rise),
+    value: rise,
+    verdict: switch (rise) {
+      null => Verdict.unknown,
+      >= 0.05 => Verdict.flag,
+      > 0 => Verdict.watch,
+      _ => Verdict.good,
+    },
+    formula: 'essential spending / income (last 3 months) - the same for those months a year earlier',
+    inputs: [
+      MeasureInput('Share now', text: now == null ? '–' : _pct(now)),
+      MeasureInput('Share a year earlier', text: before == null ? '–' : _pct(before)),
+      MeasureInput('Essential spending now, 3 months', amount: sum(recent, (f) => f.essential)),
+      MeasureInput('Essential spending then, 3 months', amount: sum(then, (f) => f.essential)),
+    ],
+    dataDate: enough
+        ? '${_span(then)}; and ${_span(recent).replaceFirst('Complete months ', '')}'
+        : _span(recent),
+    healthy: 'A rise under 5 points in a year',
+    source: const Source(
+      'Artha rule: flag a fixed-cost rise of 5 points or more in a year',
+      convention: true,
+    ),
+    note: rise == null
+        ? 'Not enough data: needs income and spending in the same three months a year earlier '
+              '(15 complete months).'
+        : rise >= 0.05
+        ? 'Fixed costs take ${pts(rise).replaceAll(' pts', '')} points more of income than a year ago; '
+              'check which essential bills grew.'
+        : 'Recurring non-essential payments are left out of this comparison.',
+  );
+}
+
 /// A recurring payment that is new or dearer within the window.
 class CreepItem {
   const CreepItem(this.recurring, {required this.isNew, required this.yearly, required this.since});

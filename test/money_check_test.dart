@@ -191,6 +191,10 @@ void main() {
       expect(cards.first.yearly, (50000 - (7370 * 52 / 12).round()) * 12);
       expect(cards.last.yearly, 1299 * 12);
       expect(cards.last.why, contains('a year'));
+      // Housing above the ONS average is shown in the comparison but is no cut card.
+      expect(cutThis(creep, compareWithOns({'cat.housing': 150000}, 'GBP'), 'GBP').map((c) => c.id), [
+        'new/-newtv',
+      ]);
       expect(cards.first.why, contains('not a judgement'));
     });
   });

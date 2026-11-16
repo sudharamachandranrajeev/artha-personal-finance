@@ -385,7 +385,7 @@ List<CutCard> cutThis(Creep creep, List<Benchmark> benchmarks, String base) {
               'saves about ${money(i.yearly, base)} a year.',
         ),
     for (final b in benchmarks)
-      if (b.verdict == Verdict.flag)
+      if (b.verdict == Verdict.flag && b.line.cuttable)
         CutCard(
           'ons/${b.line.id}',
           'Look at ${b.line.label.toLowerCase()}',

@@ -86,7 +86,15 @@ class UkRates {
 /// One spending group from ONS Family Spending: the average UK household's
 /// weekly spend ([weekly], pence) and the Artha categories that fall in it.
 class OnsLine {
-  const OnsLine(this.id, this.label, this.weekly, this.categories, {this.confirmed = true, this.note = ''});
+  const OnsLine(
+    this.id,
+    this.label,
+    this.weekly,
+    this.categories, {
+    this.confirmed = true,
+    this.note = '',
+    this.cuttable = true,
+  });
   final String id;
   final String label;
   final int weekly;
@@ -96,6 +104,10 @@ class OnsLine {
   /// against the workbook; the app says so next to it.
   final bool confirmed;
   final String note;
+
+  /// False when the ONS average is no fair target to cut towards (housing:
+  /// it averages in outright owners and leaves mortgages out).
+  final bool cuttable;
 
   /// Per month: weekly x 52 / 12.
   int get monthly => (weekly * 52 / 12).round();
@@ -115,10 +127,14 @@ class OnsFamilySpending {
       'bulletins/familyspendingintheuk/april2024tomarch2025';
   static const totalWeekly = 67660;
   static const lines = [
-    OnsLine('housing', 'Housing, fuel and power', 11840, {
-      'cat.housing',
-      'cat.utilities',
-    }, note: 'ONS counts rent net of housing benefit and leaves mortgage repayments out.'),
+    OnsLine(
+      'housing',
+      'Housing, fuel and power',
+      11840,
+      {'cat.housing', 'cat.utilities'},
+      note: 'ONS counts rent net of housing benefit and leaves mortgage repayments out.',
+      cuttable: false,
+    ),
     OnsLine('transport', 'Transport', 9640, {'cat.transport', 'cat.car'}),
     OnsLine('recreation', 'Recreation and culture', 8210, {
       'cat.entertainment',

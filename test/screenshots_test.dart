@@ -117,6 +117,33 @@ void main() {
       }
       await app.close();
     }
+    // The money check cards (Nidhi N3), each scrolled to the top.
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    final n3 = await start();
+    Future<void> at(String text, String name) async {
+      await tester.runAsync(
+        () => Scrollable.ensureVisible(tester.element(find.text(text).first), alignment: 0.02),
+      );
+      await n3.settle();
+      await shot(name);
+    }
+
+    await at('This week', 'n3-recap');
+    await at('Data freshness', 'n3-freshness');
+    await at('Emergency cushion', 'n3-cushion');
+    await n3.tap(find.text('Day by day'));
+    await at('Next 90 days', 'n3-calendar');
+    await n3.tap(find.text('${int.parse(addDays(today(), 3).substring(8))}').first);
+    await at('Next 90 days', 'n3-calendar-day');
+    await phoneGo(n3, 'Insights');
+    await at('Spending check', 'n3-spending-check');
+    await at('Lifestyle inflation', 'n3-spending-check-2');
+    await at('Cut this', 'n3-cut-this');
+    await phoneGo(n3, 'Accounts');
+    await shot('n3-accounts');
+    await n3.close();
     tester.platformDispatcher.clearPlatformBrightnessTestValue();
     tester.view.reset();
 
@@ -148,6 +175,16 @@ Future<void> seedHousehold(Ledger ledger) async {
     ]),
   );
   final now = today();
+  // Live figures as if just fetched, so the cushion shows its rate note.
+  await ledger.db.setLocalSetting(
+    'world.cache',
+    jsonEncode({
+      'fetched': '${now}T08:00:00Z',
+      'market': {'bankRate': 4.0, 'bankRateDate': '2026-11-05', 'cpi': 3.5, 'cpiMonth': 'September 2026'},
+      'news': [],
+      'failed': [],
+    }),
+  );
   final bank = await ledger.saveAccount(
     name: 'Everyday Current',
     subtype: 'current',
@@ -271,7 +308,10 @@ Future<void> seedHousehold(Ledger ledger) async {
     await spend(day(5), 'cat.council_tax', 16500, 'City Council');
     await spend(day(7), 'cat.utilities', 8400 + m * 230, 'Bright Energy');
     await spend(day(9), 'cat.phone', 2500, 'Example Mobile');
-    await spend(day(12), 'cat.subscriptions', 1099, 'StreamFlix');
+    // StreamFlix went up at its latest payment; CloudDrive started two months ago.
+    final lastStream = addDays(monthStart(now), 11).compareTo(now) <= 0 ? 0 : 1;
+    await spend(day(12), 'cat.subscriptions', m == lastStream ? 1299 : 1099, 'StreamFlix');
+    if (m <= 2) await spend(day(8), 'cat.subscriptions', 799, 'CloudDrive');
     await spend(day(15), 'cat.subscriptions', 1199, 'MusicBox');
     await spend(day(18), 'cat.insurance', 2350, 'Safe Home Insurance');
     await spend(day(21), 'cat.transport', 7800, 'Metro Travelcard');

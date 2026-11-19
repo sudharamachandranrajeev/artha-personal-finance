@@ -15,6 +15,47 @@ import 'recurring_page.dart';
 import 'risk_page.dart';
 import 'world_card.dart';
 
+/// Samriddhi's wealth summary through Brahma sync, for context. Read-only.
+class WealthBridgeCard extends ConsumerWidget {
+  const WealthBridgeCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final w = ref.watch(wealthBridgeProvider).value;
+    if (w == null) return const SizedBox.shrink();
+    final s = w.snapshot;
+    final nw = s.latestNetWorth;
+    final age = DateTime.tryParse(w.updated);
+    final days = age == null ? null : DateTime.now().toUtc().difference(age).inDays;
+    return SectionCard(
+      title: 'Investments, from Samriddhi',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '${money(s.holdingsTotal, s.currency)} across ${s.holdingsCount} holding${s.holdingsCount == 1 ? '' : 's'}'
+            '${nw == null ? '' : '; net worth ${money(nw.value, s.currency)} in ${nw.month}'}.',
+          ),
+          if (s.byClass.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(s.byClass.map((c) => '${c.assetClass} ${money(c.value, s.currency)}').join(' · ')),
+          ],
+          const SizedBox(height: 4),
+          Text(
+            'As of ${s.asOf}${days == null
+                ? ''
+                : days == 0
+                ? ', shared today'
+                : ', shared $days day${days == 1 ? '' : 's'} ago'}. '
+            'Samriddhi keeps these figures; Artha only shows them.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 Status _status(Fact f) => switch ((jsonDecode(f.data) as Map)['severity']) {
   'good' => Status.good,
   'warn' => Status.warning,
@@ -140,6 +181,7 @@ class _InsightsPageState extends ConsumerState<InsightsPage> {
                   ],
                 ),
                 const SpendingCheck(),
+                const WealthBridgeCard(),
                 if (m.isaUsed != null)
                   SectionCard(
                     title: 'ISA allowance ${UkAllowances.taxYear}',

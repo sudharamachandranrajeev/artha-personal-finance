@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:brahma_core/brahma_core.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/misc.dart' show Override;
 
 import '../db/database.dart';
+import '../modules/finance/bridge/money_bridge.dart';
 import '../modules/finance/domain/ledger.dart';
 import '../modules/finance/fx/fx_service.dart';
 import '../modules/finance/insights/forecast.dart' show ForecastEvent;
@@ -433,3 +436,55 @@ final moneyCheckProvider = FutureProvider<MoneyCheck>((ref) async {
     ),
   );
 });
+
+/// Samriddhi's wealth summary, read-only here; null until one has synced.
+final wealthBridgeProvider = FutureProvider<({WealthSnapshot snapshot, String updated})?>((ref) {
+  ref.watch(revisionProvider);
+  return readWealthSnapshot(ref.watch(sessionProvider).db);
+});
+
+/// Keeps the money row for Samriddhi up to date: a short while after
+/// imports and edits settle, it is worked out again and written only when it
+/// changed (then a sync is queued).
+final moneyBridgeProvider = Provider<MoneyBridgeWriter>((ref) {
+  final w = MoneyBridgeWriter(ref);
+  ref.listen(revisionProvider, (_, _) => w.schedule(), fireImmediately: true);
+  ref.onDispose(w.cancel);
+  return w;
+});
+
+class MoneyBridgeWriter {
+  MoneyBridgeWriter(this.ref);
+  final Ref ref;
+  static const delay = Duration(seconds: 3);
+  Timer? _timer;
+
+  void schedule() {
+    _timer?.cancel();
+    _timer = Timer(delay, () => run().ignore());
+  }
+
+  void cancel() => _timer?.cancel();
+
+  /// Works the row out now; true when it changed.
+  Future<bool> run() async {
+    try {
+      final s = ref.read(sessionProvider);
+      final day = ref.read(todayProvider);
+      final reports = await ref.read(reportsProvider.future);
+      final engine = InsightEngine(s.db, reports, await ref.read(portfolioProvider.future), day);
+      final snap = await buildMoneySnapshot(
+        engine: engine,
+        reports: reports,
+        planned: await ref.read(plannedProvider.future),
+        today: day,
+      );
+      final wrote = await writeMoneySnapshot(s.store, snap);
+      if (wrote) ref.read(syncProvider.notifier).soon();
+      return wrote;
+    } catch (_) {
+      // Never in the way: the next change tries again.
+      return false;
+    }
+  }
+}

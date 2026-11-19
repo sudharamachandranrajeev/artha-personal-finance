@@ -62,4 +62,21 @@ void main() {
     expect((await ledger.planned()).single.label, 'Bonus');
     await db.close();
   });
+
+  test('a version 3 database gains the money and wealth bridges and pulls everything again', () async {
+    final file = File('${(await Directory.systemTemp.createTemp('artha')).path}/t.db');
+    var db = await openTestDatabase(file: file);
+    await Ledger(await Store.open(db)).seedDefaults('GBP');
+    await db.customStatement('DROP TABLE bridge_money_snapshot');
+    await db.customStatement('DROP TABLE bridge_wealth_snapshot');
+    await db.customStatement("INSERT INTO sync_cursors (device_id, seq) VALUES ('phone', 7)");
+    await db.customStatement('PRAGMA user_version = 3');
+    await db.close();
+
+    db = await openTestDatabase(file: file);
+    expect(await db.customSelect('SELECT * FROM sync_cursors').get(), isEmpty);
+    expect(await db.select(db.bridgeMoneySnapshot).get(), isEmpty);
+    expect(await db.select(db.bridgeWealthSnapshot).get(), isEmpty);
+    await db.close();
+  });
 }

@@ -23,6 +23,8 @@ part 'database.g.dart';
     Facts,
     Prefs,
     ImportProfiles,
+    BridgeMoneySnapshot,
+    BridgeWealthSnapshot,
     Outbox,
     SyncCursors,
     LocalSettings,
@@ -49,6 +51,8 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
     'facts',
     'prefs',
     'import_profiles',
+    'bridge_money_snapshot',
+    'bridge_wealth_snapshot',
   ];
 
   /// Entries carry their postings with them.
@@ -58,7 +62,7 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
   };
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -75,6 +79,10 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
         await m.createTable(recurrings);
       }
       if (from < 3) await m.createTable(planned);
+      if (from < 4) {
+        await m.createTable(bridgeMoneySnapshot);
+        await m.createTable(bridgeWealthSnapshot);
+      }
       // Older versions skipped synced rows for tables they did not have yet;
       // pulling every device's changes again from the start brings them in.
       // Applying a change is idempotent (the newer row wins), so only the

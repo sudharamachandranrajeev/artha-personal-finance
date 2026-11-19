@@ -5950,6 +5950,714 @@ class ImportProfilesCompanion extends UpdateCompanion<ImportProfile> {
   }
 }
 
+class $BridgeMoneySnapshotTable extends BridgeMoneySnapshot
+    with TableInfo<$BridgeMoneySnapshotTable, MoneySnapshotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BridgeMoneySnapshotTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hlcMeta = const VerificationMeta('hlc');
+  @override
+  late final GeneratedColumn<String> hlc = GeneratedColumn<String>(
+    'hlc',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _snapshotMeta = const VerificationMeta('snapshot');
+  @override
+  late final GeneratedColumn<String> snapshot = GeneratedColumn<String>(
+    'snapshot',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _updatedMeta = const VerificationMeta('updated');
+  @override
+  late final GeneratedColumn<String> updated = GeneratedColumn<String>(
+    'updated',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, hlc, deleted, source, snapshot, updated];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bridge_money_snapshot';
+  @override
+  VerificationContext validateIntegrity(Insertable<MoneySnapshotRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('hlc')) {
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('snapshot')) {
+      context.handle(_snapshotMeta, snapshot.isAcceptableOrUnknown(data['snapshot']!, _snapshotMeta));
+    }
+    if (data.containsKey('updated')) {
+      context.handle(_updatedMeta, updated.isAcceptableOrUnknown(data['updated']!, _updatedMeta));
+    } else if (isInserting) {
+      context.missing(_updatedMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MoneySnapshotRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MoneySnapshotRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      source: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      snapshot: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}snapshot'])!,
+      updated: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}updated'])!,
+    );
+  }
+
+  @override
+  $BridgeMoneySnapshotTable createAlias(String alias) {
+    return $BridgeMoneySnapshotTable(attachedDatabase, alias);
+  }
+}
+
+class MoneySnapshotRow extends DataClass implements Insertable<MoneySnapshotRow> {
+  final String id;
+  final String hlc;
+  final bool deleted;
+
+  /// The app that wrote it, as its identity id (`artha`).
+  final String source;
+
+  /// [MoneySnapshot] as JSON.
+  final String snapshot;
+
+  /// When it last changed (UTC, ISO 8601).
+  final String updated;
+  const MoneySnapshotRow({
+    required this.id,
+    required this.hlc,
+    required this.deleted,
+    required this.source,
+    required this.snapshot,
+    required this.updated,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['hlc'] = Variable<String>(hlc);
+    map['deleted'] = Variable<bool>(deleted);
+    map['source'] = Variable<String>(source);
+    map['snapshot'] = Variable<String>(snapshot);
+    map['updated'] = Variable<String>(updated);
+    return map;
+  }
+
+  BridgeMoneySnapshotCompanion toCompanion(bool nullToAbsent) {
+    return BridgeMoneySnapshotCompanion(
+      id: Value(id),
+      hlc: Value(hlc),
+      deleted: Value(deleted),
+      source: Value(source),
+      snapshot: Value(snapshot),
+      updated: Value(updated),
+    );
+  }
+
+  factory MoneySnapshotRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MoneySnapshotRow(
+      id: serializer.fromJson<String>(json['id']),
+      hlc: serializer.fromJson<String>(json['hlc']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      source: serializer.fromJson<String>(json['source']),
+      snapshot: serializer.fromJson<String>(json['snapshot']),
+      updated: serializer.fromJson<String>(json['updated']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'hlc': serializer.toJson<String>(hlc),
+      'deleted': serializer.toJson<bool>(deleted),
+      'source': serializer.toJson<String>(source),
+      'snapshot': serializer.toJson<String>(snapshot),
+      'updated': serializer.toJson<String>(updated),
+    };
+  }
+
+  MoneySnapshotRow copyWith({
+    String? id,
+    String? hlc,
+    bool? deleted,
+    String? source,
+    String? snapshot,
+    String? updated,
+  }) => MoneySnapshotRow(
+    id: id ?? this.id,
+    hlc: hlc ?? this.hlc,
+    deleted: deleted ?? this.deleted,
+    source: source ?? this.source,
+    snapshot: snapshot ?? this.snapshot,
+    updated: updated ?? this.updated,
+  );
+  MoneySnapshotRow copyWithCompanion(BridgeMoneySnapshotCompanion data) {
+    return MoneySnapshotRow(
+      id: data.id.present ? data.id.value : this.id,
+      hlc: data.hlc.present ? data.hlc.value : this.hlc,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      source: data.source.present ? data.source.value : this.source,
+      snapshot: data.snapshot.present ? data.snapshot.value : this.snapshot,
+      updated: data.updated.present ? data.updated.value : this.updated,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MoneySnapshotRow(')
+          ..write('id: $id, ')
+          ..write('hlc: $hlc, ')
+          ..write('deleted: $deleted, ')
+          ..write('source: $source, ')
+          ..write('snapshot: $snapshot, ')
+          ..write('updated: $updated')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, hlc, deleted, source, snapshot, updated);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MoneySnapshotRow &&
+          other.id == this.id &&
+          other.hlc == this.hlc &&
+          other.deleted == this.deleted &&
+          other.source == this.source &&
+          other.snapshot == this.snapshot &&
+          other.updated == this.updated);
+}
+
+class BridgeMoneySnapshotCompanion extends UpdateCompanion<MoneySnapshotRow> {
+  final Value<String> id;
+  final Value<String> hlc;
+  final Value<bool> deleted;
+  final Value<String> source;
+  final Value<String> snapshot;
+  final Value<String> updated;
+  final Value<int> rowid;
+  const BridgeMoneySnapshotCompanion({
+    this.id = const Value.absent(),
+    this.hlc = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.source = const Value.absent(),
+    this.snapshot = const Value.absent(),
+    this.updated = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BridgeMoneySnapshotCompanion.insert({
+    required String id,
+    this.hlc = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required String source,
+    this.snapshot = const Value.absent(),
+    required String updated,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       source = Value(source),
+       updated = Value(updated);
+  static Insertable<MoneySnapshotRow> custom({
+    Expression<String>? id,
+    Expression<String>? hlc,
+    Expression<bool>? deleted,
+    Expression<String>? source,
+    Expression<String>? snapshot,
+    Expression<String>? updated,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (hlc != null) 'hlc': hlc,
+      if (deleted != null) 'deleted': deleted,
+      if (source != null) 'source': source,
+      if (snapshot != null) 'snapshot': snapshot,
+      if (updated != null) 'updated': updated,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BridgeMoneySnapshotCompanion copyWith({
+    Value<String>? id,
+    Value<String>? hlc,
+    Value<bool>? deleted,
+    Value<String>? source,
+    Value<String>? snapshot,
+    Value<String>? updated,
+    Value<int>? rowid,
+  }) {
+    return BridgeMoneySnapshotCompanion(
+      id: id ?? this.id,
+      hlc: hlc ?? this.hlc,
+      deleted: deleted ?? this.deleted,
+      source: source ?? this.source,
+      snapshot: snapshot ?? this.snapshot,
+      updated: updated ?? this.updated,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (hlc.present) {
+      map['hlc'] = Variable<String>(hlc.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (snapshot.present) {
+      map['snapshot'] = Variable<String>(snapshot.value);
+    }
+    if (updated.present) {
+      map['updated'] = Variable<String>(updated.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BridgeMoneySnapshotCompanion(')
+          ..write('id: $id, ')
+          ..write('hlc: $hlc, ')
+          ..write('deleted: $deleted, ')
+          ..write('source: $source, ')
+          ..write('snapshot: $snapshot, ')
+          ..write('updated: $updated, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BridgeWealthSnapshotTable extends BridgeWealthSnapshot
+    with TableInfo<$BridgeWealthSnapshotTable, WealthSnapshotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BridgeWealthSnapshotTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hlcMeta = const VerificationMeta('hlc');
+  @override
+  late final GeneratedColumn<String> hlc = GeneratedColumn<String>(
+    'hlc',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _snapshotMeta = const VerificationMeta('snapshot');
+  @override
+  late final GeneratedColumn<String> snapshot = GeneratedColumn<String>(
+    'snapshot',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _updatedMeta = const VerificationMeta('updated');
+  @override
+  late final GeneratedColumn<String> updated = GeneratedColumn<String>(
+    'updated',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, hlc, deleted, source, snapshot, updated];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bridge_wealth_snapshot';
+  @override
+  VerificationContext validateIntegrity(Insertable<WealthSnapshotRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('hlc')) {
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('snapshot')) {
+      context.handle(_snapshotMeta, snapshot.isAcceptableOrUnknown(data['snapshot']!, _snapshotMeta));
+    }
+    if (data.containsKey('updated')) {
+      context.handle(_updatedMeta, updated.isAcceptableOrUnknown(data['updated']!, _updatedMeta));
+    } else if (isInserting) {
+      context.missing(_updatedMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WealthSnapshotRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WealthSnapshotRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      source: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      snapshot: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}snapshot'])!,
+      updated: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}updated'])!,
+    );
+  }
+
+  @override
+  $BridgeWealthSnapshotTable createAlias(String alias) {
+    return $BridgeWealthSnapshotTable(attachedDatabase, alias);
+  }
+}
+
+class WealthSnapshotRow extends DataClass implements Insertable<WealthSnapshotRow> {
+  final String id;
+  final String hlc;
+  final bool deleted;
+
+  /// The app that wrote it, as its identity id (`samriddhi`).
+  final String source;
+
+  /// [WealthSnapshot] as JSON.
+  final String snapshot;
+
+  /// When it last changed (UTC, ISO 8601).
+  final String updated;
+  const WealthSnapshotRow({
+    required this.id,
+    required this.hlc,
+    required this.deleted,
+    required this.source,
+    required this.snapshot,
+    required this.updated,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['hlc'] = Variable<String>(hlc);
+    map['deleted'] = Variable<bool>(deleted);
+    map['source'] = Variable<String>(source);
+    map['snapshot'] = Variable<String>(snapshot);
+    map['updated'] = Variable<String>(updated);
+    return map;
+  }
+
+  BridgeWealthSnapshotCompanion toCompanion(bool nullToAbsent) {
+    return BridgeWealthSnapshotCompanion(
+      id: Value(id),
+      hlc: Value(hlc),
+      deleted: Value(deleted),
+      source: Value(source),
+      snapshot: Value(snapshot),
+      updated: Value(updated),
+    );
+  }
+
+  factory WealthSnapshotRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WealthSnapshotRow(
+      id: serializer.fromJson<String>(json['id']),
+      hlc: serializer.fromJson<String>(json['hlc']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      source: serializer.fromJson<String>(json['source']),
+      snapshot: serializer.fromJson<String>(json['snapshot']),
+      updated: serializer.fromJson<String>(json['updated']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'hlc': serializer.toJson<String>(hlc),
+      'deleted': serializer.toJson<bool>(deleted),
+      'source': serializer.toJson<String>(source),
+      'snapshot': serializer.toJson<String>(snapshot),
+      'updated': serializer.toJson<String>(updated),
+    };
+  }
+
+  WealthSnapshotRow copyWith({
+    String? id,
+    String? hlc,
+    bool? deleted,
+    String? source,
+    String? snapshot,
+    String? updated,
+  }) => WealthSnapshotRow(
+    id: id ?? this.id,
+    hlc: hlc ?? this.hlc,
+    deleted: deleted ?? this.deleted,
+    source: source ?? this.source,
+    snapshot: snapshot ?? this.snapshot,
+    updated: updated ?? this.updated,
+  );
+  WealthSnapshotRow copyWithCompanion(BridgeWealthSnapshotCompanion data) {
+    return WealthSnapshotRow(
+      id: data.id.present ? data.id.value : this.id,
+      hlc: data.hlc.present ? data.hlc.value : this.hlc,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      source: data.source.present ? data.source.value : this.source,
+      snapshot: data.snapshot.present ? data.snapshot.value : this.snapshot,
+      updated: data.updated.present ? data.updated.value : this.updated,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WealthSnapshotRow(')
+          ..write('id: $id, ')
+          ..write('hlc: $hlc, ')
+          ..write('deleted: $deleted, ')
+          ..write('source: $source, ')
+          ..write('snapshot: $snapshot, ')
+          ..write('updated: $updated')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, hlc, deleted, source, snapshot, updated);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WealthSnapshotRow &&
+          other.id == this.id &&
+          other.hlc == this.hlc &&
+          other.deleted == this.deleted &&
+          other.source == this.source &&
+          other.snapshot == this.snapshot &&
+          other.updated == this.updated);
+}
+
+class BridgeWealthSnapshotCompanion extends UpdateCompanion<WealthSnapshotRow> {
+  final Value<String> id;
+  final Value<String> hlc;
+  final Value<bool> deleted;
+  final Value<String> source;
+  final Value<String> snapshot;
+  final Value<String> updated;
+  final Value<int> rowid;
+  const BridgeWealthSnapshotCompanion({
+    this.id = const Value.absent(),
+    this.hlc = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.source = const Value.absent(),
+    this.snapshot = const Value.absent(),
+    this.updated = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BridgeWealthSnapshotCompanion.insert({
+    required String id,
+    this.hlc = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required String source,
+    this.snapshot = const Value.absent(),
+    required String updated,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       source = Value(source),
+       updated = Value(updated);
+  static Insertable<WealthSnapshotRow> custom({
+    Expression<String>? id,
+    Expression<String>? hlc,
+    Expression<bool>? deleted,
+    Expression<String>? source,
+    Expression<String>? snapshot,
+    Expression<String>? updated,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (hlc != null) 'hlc': hlc,
+      if (deleted != null) 'deleted': deleted,
+      if (source != null) 'source': source,
+      if (snapshot != null) 'snapshot': snapshot,
+      if (updated != null) 'updated': updated,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BridgeWealthSnapshotCompanion copyWith({
+    Value<String>? id,
+    Value<String>? hlc,
+    Value<bool>? deleted,
+    Value<String>? source,
+    Value<String>? snapshot,
+    Value<String>? updated,
+    Value<int>? rowid,
+  }) {
+    return BridgeWealthSnapshotCompanion(
+      id: id ?? this.id,
+      hlc: hlc ?? this.hlc,
+      deleted: deleted ?? this.deleted,
+      source: source ?? this.source,
+      snapshot: snapshot ?? this.snapshot,
+      updated: updated ?? this.updated,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (hlc.present) {
+      map['hlc'] = Variable<String>(hlc.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (snapshot.present) {
+      map['snapshot'] = Variable<String>(snapshot.value);
+    }
+    if (updated.present) {
+      map['updated'] = Variable<String>(updated.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BridgeWealthSnapshotCompanion(')
+          ..write('id: $id, ')
+          ..write('hlc: $hlc, ')
+          ..write('deleted: $deleted, ')
+          ..write('source: $source, ')
+          ..write('snapshot: $snapshot, ')
+          ..write('updated: $updated, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxItem> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -6558,6 +7266,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FactsTable facts = $FactsTable(this);
   late final $PrefsTable prefs = $PrefsTable(this);
   late final $ImportProfilesTable importProfiles = $ImportProfilesTable(this);
+  late final $BridgeMoneySnapshotTable bridgeMoneySnapshot = $BridgeMoneySnapshotTable(this);
+  late final $BridgeWealthSnapshotTable bridgeWealthSnapshot = $BridgeWealthSnapshotTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $SyncCursorsTable syncCursors = $SyncCursorsTable(this);
   late final $LocalSettingsTable localSettings = $LocalSettingsTable(this);
@@ -6580,6 +7290,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     facts,
     prefs,
     importProfiles,
+    bridgeMoneySnapshot,
+    bridgeWealthSnapshot,
     outbox,
     syncCursors,
     localSettings,
@@ -9656,6 +10368,379 @@ typedef $$ImportProfilesTableProcessedTableManager =
       ImportProfile,
       PrefetchHooks Function()
     >;
+typedef $$BridgeMoneySnapshotTableCreateCompanionBuilder = BridgeMoneySnapshotCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String source,
+  Value<String> snapshot,
+  required String updated,
+  Value<int> rowid,
+});
+typedef $$BridgeMoneySnapshotTableUpdateCompanionBuilder = BridgeMoneySnapshotCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> source,
+  Value<String> snapshot,
+  Value<String> updated,
+  Value<int> rowid,
+});
+
+class $$BridgeMoneySnapshotTableFilterComposer extends Composer<_$AppDatabase, $BridgeMoneySnapshotTable> {
+  $$BridgeMoneySnapshotTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get snapshot =>
+      $composableBuilder(column: $table.snapshot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get updated =>
+      $composableBuilder(column: $table.updated, builder: (column) => ColumnFilters(column));
+}
+
+class $$BridgeMoneySnapshotTableOrderingComposer extends Composer<_$AppDatabase, $BridgeMoneySnapshotTable> {
+  $$BridgeMoneySnapshotTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get snapshot =>
+      $composableBuilder(column: $table.snapshot, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get updated =>
+      $composableBuilder(column: $table.updated, builder: (column) => ColumnOrderings(column));
+}
+
+class $$BridgeMoneySnapshotTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BridgeMoneySnapshotTable> {
+  $$BridgeMoneySnapshotTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get snapshot =>
+      $composableBuilder(column: $table.snapshot, builder: (column) => column);
+
+  GeneratedColumn<String> get updated =>
+      $composableBuilder(column: $table.updated, builder: (column) => column);
+}
+
+class $$BridgeMoneySnapshotTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BridgeMoneySnapshotTable,
+          MoneySnapshotRow,
+          $$BridgeMoneySnapshotTableFilterComposer,
+          $$BridgeMoneySnapshotTableOrderingComposer,
+          $$BridgeMoneySnapshotTableAnnotationComposer,
+          $$BridgeMoneySnapshotTableCreateCompanionBuilder,
+          $$BridgeMoneySnapshotTableUpdateCompanionBuilder,
+          (MoneySnapshotRow, BaseReferences<_$AppDatabase, $BridgeMoneySnapshotTable, MoneySnapshotRow>),
+          MoneySnapshotRow,
+          PrefetchHooks Function()
+        > {
+  $$BridgeMoneySnapshotTableTableManager(_$AppDatabase db, $BridgeMoneySnapshotTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $$BridgeMoneySnapshotTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$BridgeMoneySnapshotTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BridgeMoneySnapshotTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> hlc = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> snapshot = const Value.absent(),
+                Value<String> updated = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BridgeMoneySnapshotCompanion(
+                id: id,
+                hlc: hlc,
+                deleted: deleted,
+                source: source,
+                snapshot: snapshot,
+                updated: updated,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> hlc = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required String source,
+                Value<String> snapshot = const Value.absent(),
+                required String updated,
+                Value<int> rowid = const Value.absent(),
+              }) => BridgeMoneySnapshotCompanion.insert(
+                id: id,
+                hlc: hlc,
+                deleted: deleted,
+                source: source,
+                snapshot: snapshot,
+                updated: updated,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BridgeMoneySnapshotTable, MoneySnapshotRow>(table),
+                  BaseReferences<_$AppDatabase, $BridgeMoneySnapshotTable, MoneySnapshotRow>(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BridgeMoneySnapshotTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BridgeMoneySnapshotTable,
+      MoneySnapshotRow,
+      $$BridgeMoneySnapshotTableFilterComposer,
+      $$BridgeMoneySnapshotTableOrderingComposer,
+      $$BridgeMoneySnapshotTableAnnotationComposer,
+      $$BridgeMoneySnapshotTableCreateCompanionBuilder,
+      $$BridgeMoneySnapshotTableUpdateCompanionBuilder,
+      (MoneySnapshotRow, BaseReferences<_$AppDatabase, $BridgeMoneySnapshotTable, MoneySnapshotRow>),
+      MoneySnapshotRow,
+      PrefetchHooks Function()
+    >;
+typedef $$BridgeWealthSnapshotTableCreateCompanionBuilder = BridgeWealthSnapshotCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String source,
+  Value<String> snapshot,
+  required String updated,
+  Value<int> rowid,
+});
+typedef $$BridgeWealthSnapshotTableUpdateCompanionBuilder = BridgeWealthSnapshotCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> source,
+  Value<String> snapshot,
+  Value<String> updated,
+  Value<int> rowid,
+});
+
+class $$BridgeWealthSnapshotTableFilterComposer extends Composer<_$AppDatabase, $BridgeWealthSnapshotTable> {
+  $$BridgeWealthSnapshotTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get snapshot =>
+      $composableBuilder(column: $table.snapshot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get updated =>
+      $composableBuilder(column: $table.updated, builder: (column) => ColumnFilters(column));
+}
+
+class $$BridgeWealthSnapshotTableOrderingComposer
+    extends Composer<_$AppDatabase, $BridgeWealthSnapshotTable> {
+  $$BridgeWealthSnapshotTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get snapshot =>
+      $composableBuilder(column: $table.snapshot, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get updated =>
+      $composableBuilder(column: $table.updated, builder: (column) => ColumnOrderings(column));
+}
+
+class $$BridgeWealthSnapshotTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BridgeWealthSnapshotTable> {
+  $$BridgeWealthSnapshotTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get snapshot =>
+      $composableBuilder(column: $table.snapshot, builder: (column) => column);
+
+  GeneratedColumn<String> get updated =>
+      $composableBuilder(column: $table.updated, builder: (column) => column);
+}
+
+class $$BridgeWealthSnapshotTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BridgeWealthSnapshotTable,
+          WealthSnapshotRow,
+          $$BridgeWealthSnapshotTableFilterComposer,
+          $$BridgeWealthSnapshotTableOrderingComposer,
+          $$BridgeWealthSnapshotTableAnnotationComposer,
+          $$BridgeWealthSnapshotTableCreateCompanionBuilder,
+          $$BridgeWealthSnapshotTableUpdateCompanionBuilder,
+          (WealthSnapshotRow, BaseReferences<_$AppDatabase, $BridgeWealthSnapshotTable, WealthSnapshotRow>),
+          WealthSnapshotRow,
+          PrefetchHooks Function()
+        > {
+  $$BridgeWealthSnapshotTableTableManager(_$AppDatabase db, $BridgeWealthSnapshotTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $$BridgeWealthSnapshotTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$BridgeWealthSnapshotTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BridgeWealthSnapshotTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> hlc = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> snapshot = const Value.absent(),
+                Value<String> updated = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BridgeWealthSnapshotCompanion(
+                id: id,
+                hlc: hlc,
+                deleted: deleted,
+                source: source,
+                snapshot: snapshot,
+                updated: updated,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> hlc = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required String source,
+                Value<String> snapshot = const Value.absent(),
+                required String updated,
+                Value<int> rowid = const Value.absent(),
+              }) => BridgeWealthSnapshotCompanion.insert(
+                id: id,
+                hlc: hlc,
+                deleted: deleted,
+                source: source,
+                snapshot: snapshot,
+                updated: updated,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BridgeWealthSnapshotTable, WealthSnapshotRow>(table),
+                  BaseReferences<_$AppDatabase, $BridgeWealthSnapshotTable, WealthSnapshotRow>(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BridgeWealthSnapshotTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BridgeWealthSnapshotTable,
+      WealthSnapshotRow,
+      $$BridgeWealthSnapshotTableFilterComposer,
+      $$BridgeWealthSnapshotTableOrderingComposer,
+      $$BridgeWealthSnapshotTableAnnotationComposer,
+      $$BridgeWealthSnapshotTableCreateCompanionBuilder,
+      $$BridgeWealthSnapshotTableUpdateCompanionBuilder,
+      (WealthSnapshotRow, BaseReferences<_$AppDatabase, $BridgeWealthSnapshotTable, WealthSnapshotRow>),
+      WealthSnapshotRow,
+      PrefetchHooks Function()
+    >;
 typedef $$OutboxTableCreateCompanionBuilder = OutboxCompanion Function({
   required String entity,
   required String rowId,
@@ -10032,6 +11117,10 @@ class $AppDatabaseManager {
   $$PrefsTableTableManager get prefs => $$PrefsTableTableManager(_db, _db.prefs);
   $$ImportProfilesTableTableManager get importProfiles =>
       $$ImportProfilesTableTableManager(_db, _db.importProfiles);
+  $$BridgeMoneySnapshotTableTableManager get bridgeMoneySnapshot =>
+      $$BridgeMoneySnapshotTableTableManager(_db, _db.bridgeMoneySnapshot);
+  $$BridgeWealthSnapshotTableTableManager get bridgeWealthSnapshot =>
+      $$BridgeWealthSnapshotTableTableManager(_db, _db.bridgeWealthSnapshot);
   $$OutboxTableTableManager get outbox => $$OutboxTableTableManager(_db, _db.outbox);
   $$SyncCursorsTableTableManager get syncCursors => $$SyncCursorsTableTableManager(_db, _db.syncCursors);
   $$LocalSettingsTableTableManager get localSettings =>

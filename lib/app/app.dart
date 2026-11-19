@@ -55,6 +55,8 @@ class ArthaHome extends ConsumerWidget {
     final setup = ref.watch(setupProvider);
     // Keep the current screen while the provider reloads after each write.
     if (setup.hasValue) {
+      // Once set up, keep Samriddhi's money row current.
+      if (setup.value != null) ref.watch(moneyBridgeProvider);
       return setup.value == null
           ? const OnboardingPage()
           : AppShell(

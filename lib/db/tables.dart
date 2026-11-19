@@ -188,6 +188,15 @@ class ImportProfiles extends Table with SyncedRow {
   TextColumn get mapping => text()();
 }
 
+// Money and wealth bridges, shared with Samriddhi (columns from brahma_core).
+// Artha writes the money row; the wealth row is Samriddhi's and only read.
+
+@DataClassName('MoneySnapshotRow')
+class BridgeMoneySnapshot extends Table with SyncedRow, MoneySnapshotColumns {}
+
+@DataClassName('WealthSnapshotRow')
+class BridgeWealthSnapshot extends Table with SyncedRow, WealthSnapshotColumns {}
+
 // The tables sync needs; their columns come from brahma_core.
 
 @DataClassName('Pref')
